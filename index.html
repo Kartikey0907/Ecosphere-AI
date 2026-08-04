@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoPulse AI</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div id="auth-section" class="glass-card">
+        <h2>Welcome to EcoPulse AI</h2>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="handleLogin()">Login / Sign Up</button>
+        <button onclick="handleGoogleLogin()" class="google-btn">Continue with Google</button>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <header>
+            <h1>EcoPulse Dashboard</h1>
+            <div class="user-badge">
+                <span id="user-level">🌱 Seedling</span> | <span id="user-points">0 EcoPoints</span>
+                <button onclick="handleLogout()">Logout</button>
+            </div>
+        </header>
+
+        <main class="bento-grid">
+            <div class="bento-card avatar-card">
+                <h3>Your Eco Avatar</h3>
+                <canvas id="ecoAvatar" width="200" height="200"></canvas>
+            </div>
+
+            <div class="bento-card ai-card">
+                <h3>🌍 Gaia AI Coach</h3>
+                <p id="ai-recommendation">Analyzing your recent logs to generate insights...</p>
+            </div>
+
+            <div class="bento-card chart-card">
+                <h3>Carbon Emissions Trend</h3>
+                <canvas id="emissionsChart"></canvas>
+            </div>
+
+            <div class="bento-card log-card">
+                <h3>Log Daily Habits</h3>
+                <input type="number" id="transport" placeholder="Transport Distance (km)">
+                <input type="number" id="energy" placeholder="Electricity (kWh)">
+                <input type="number" id="water" placeholder="Water Usage (Liters)">
+                <button onclick="submitLog()">Log Data & Earn Points</button>
+            </div>
+
+            <div class="bento-card feed-card">
+                <h3>Live Community Impact</h3>
+                <ul id="live-feed">
+                    <li>Waiting for updates...</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

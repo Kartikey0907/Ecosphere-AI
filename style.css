@@ -1,0 +1,82 @@
+:root {
+    --bg-color: #f4f7f6;
+    --card-bg: rgba(255, 255, 255, 0.6);
+    --text-main: #2d3436;
+    --accent: #00b894;
+    --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    color: var(--text-main);
+    margin: 0;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.hidden { display: none !important; }
+
+/* Glassmorphism Cards */
+.glass-card, .bento-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease;
+}
+
+.bento-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Authentication Section */
+#auth-section {
+    max-width: 400px;
+    margin: 10vh auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+input {
+    padding: 0.8rem;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+}
+
+button {
+    padding: 0.8rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+button:hover { opacity: 0.9; }
+.google-btn { background: #0984e3; }
+
+/* Bento Grid Layout */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.ai-card { grid-column: 1 / -1; background: rgba(0, 184, 148, 0.1); border-left: 5px solid var(--accent); }
+.log-card { display: flex; flex-direction: column; gap: 0.8rem; }

@@ -1,0 +1,292 @@
+// EcoSphere AI - Database Schema
+// Using SQLite for zero-config setup. Switch to PostgreSQL by changing provider and DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USER & AUTH ────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  avatar        String?
+  role          String    @default("USER") // USER, MODERATOR, ADMIN
+  level         Int       @default(1)
+  xp            Int       @default(0)
+  streak        Int       @default(0)
+  longestStreak Int       @default(0)
+  lastLogDate   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  dailyLogs        DailyLog[]
+  scores           SustainabilityScore[]
+  goals            Goal[]
+  userChallenges   UserChallenge[]
+  userAchievements UserAchievement[]
+  notifications    Notification[]
+  aiInsights       AiInsight[]
+  sentRequests     Friend[]        @relation("SentFriendRequests")
+  receivedRequests Friend[]        @relation("ReceivedFriendRequests")
+  leaderboard      LeaderboardEntry[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── DAILY ACTIVITY LOGS ────────────────────────────────────
+
+model DailyLog {
+  id              String   @id @default(cuid())
+  userId          String
+  date            String   // YYYY-MM-DD format
+  
+  // Transportation (km)
+  carKm           Float    @default(0)
+  busKm           Float    @default(0)
+  trainKm         Float    @default(0)
+  bikeKm          Float    @default(0)
+  walkKm          Float    @default(0)
+  flightKm        Float    @default(0)
+  
+  // Water (liters)
+  waterUsage      Float    @default(0)
+  
+  // Electricity (kWh)
+  electricityUsage Float   @default(0)
+  
+  // Food
+  meatMeals       Int      @default(0)
+  vegMeals        Int      @default(0)
+  veganMeals      Int      @default(0)
+  
+  // Waste & Recycling
+  plasticItems    Int      @default(0)
+  recycledItems   Int      @default(0)
+  compostedKg     Float    @default(0)
+  
+  // Shopping
+  newClothingItems Int     @default(0)
+  secondHandItems  Int     @default(0)
+  
+  // Calculated
+  carbonFootprint Float    @default(0) // kg CO2e
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+// ─── SUSTAINABILITY SCORE ───────────────────────────────────
+
+model SustainabilityScore {
+  id             String   @id @default(cuid())
+  userId         String
+  date           String   // YYYY-MM-DD
+  
+  carbonScore    Float    @default(50)
+  waterScore     Float    @default(50)
+  energyScore    Float    @default(50)
+  transportScore Float    @default(50)
+  recyclingScore Float    @default(50)
+  wasteScore     Float    @default(50)
+  overallScore   Float    @default(50)
+  
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+// ─── GOALS ──────────────────────────────────────────────────
+
+model Goal {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  description  String?
+  category     String   // CARBON, WATER, ENERGY, TRANSPORT, RECYCLING, WASTE
+  targetValue  Float
+  currentValue Float    @default(0)
+  unit         String   // kg, liters, kWh, km, items, days
+  startDate    String
+  endDate      String
+  status       String   @default("ACTIVE") // ACTIVE, COMPLETED, FAILED, PAUSED
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── CHALLENGES ─────────────────────────────────────────────
+
+model Challenge {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   // CARBON, WATER, ENERGY, TRANSPORT, RECYCLING, GENERAL
+  xpReward    Int
+  difficulty  String   // EASY, MEDIUM, HARD, EPIC
+  type        String   // DAILY, WEEKLY, MONTHLY
+  targetValue Float
+  unit        String
+  icon        String   @default("🌱")
+  active      Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+
+  userChallenges UserChallenge[]
+}
+
+model UserChallenge {
+  id          String    @id @default(cuid())
+  userId      String
+  challengeId String
+  progress    Float     @default(0)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  joinedAt    DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+}
+
+// ─── ACHIEVEMENTS ───────────────────────────────────────────
+
+model Achievement {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  icon        String
+  category    String // CARBON, WATER, ENERGY, SOCIAL, STREAKS, GENERAL
+  requirement String // JSON: { "type": "streak", "value": 7 }
+  xpReward    Int
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+// ─── NOTIFICATIONS ──────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // ACHIEVEMENT, CHALLENGE, GOAL, AI_INSIGHT, SYSTEM, SOCIAL
+  read      Boolean  @default(false)
+  actionUrl String?
+  
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── AI INSIGHTS ────────────────────────────────────────────
+
+model AiInsight {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // TIP, FORECAST, REPORT, RECOMMENDATION, ALERT
+  title     String
+  content   String
+  impact    String?  // LOW, MEDIUM, HIGH
+  category  String?  // CARBON, WATER, ENERGY, TRANSPORT, GENERAL
+  dismissed Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── COMMUNITY ──────────────────────────────────────────────
+
+model Friend {
+  id       String @id @default(cuid())
+  userId   String
+  friendId String
+  status   String @default("PENDING") // PENDING, ACCEPTED, BLOCKED
+
+  createdAt DateTime @default(now())
+
+  user   User @relation("SentFriendRequests", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("ReceivedFriendRequests", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+}
+
+model LeaderboardEntry {
+  id     String @id @default(cuid())
+  userId String
+  period String // WEEKLY, MONTHLY, ALL_TIME
+  score  Float
+  rank   Int
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period])
+}
